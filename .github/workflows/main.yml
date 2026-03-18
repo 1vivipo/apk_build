@@ -34,22 +34,19 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease > build-${{ inputs.app_name }}.log
 
+      - name: Install OSSUtil
+        run: |
+          wget https://gosspublic.alicdn.com/ossutil/1.7.14/ossutil64
+          chmod +x ossutil64
+
+      - name: Configure OSSUtil
+        run: |
+          ./ossutil64 config -e oss-cn-beijing.aliyuncs.com -i ${{ secrets.ALIYUN_AK }} -k ${{ secrets.ALIYUN_SK }}
+
       - name: Upload log to Aliyun OSS
-        uses: aliyun/oss-upload-action@v1
-        with:
-          accessKeyId: ${{ secrets.ALIYUN_AK }}
-          accessKeySecret: ${{ secrets.ALIYUN_SK }}
-          bucket: ${{ secrets.ALIYUN_BUCKET }}
-          region: oss-cn-beijing
-          path: ./build-${{ inputs.app_name }}.log
-          prefix: logs/
+        run: |
+          ./ossutil64 cp ./build-${{ inputs.app_name }}.log oss://${{ secrets.ALIYUN_BUCKET }}/logs/
 
       - name: Upload APK to Aliyun OSS
-        uses: aliyun/oss-upload-action@v1
-        with:
-          accessKeyId: ${{ secrets.ALIYUN_AK }}
-          accessKeySecret: ${{ secrets.ALIYUN_SK }}
-          bucket: ${{ secrets.ALIYUN_BUCKET }}
-          region: oss-cn-beijing
-          path: ./app/build/outputs/apk/release/*.apk
-          prefix: apks/${{ inputs.app_name }}/
+        run: |
+          ./ossutil64 cp ./app/build/outputs/apk/release/*.apk oss://${{ secrets.ALIYUN_BUCKET }}/apks/${{ inputs.app_name }}/
