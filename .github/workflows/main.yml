@@ -34,6 +34,15 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease > build-${{ inputs.app_name }}.log
 
+      # 上传日志到 GitHub Actions Artifact（Agent 可直接读取）
+      - name: Upload build log to GitHub Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ inputs.app_name }}
+          path: ./build-${{ inputs.app_name }}.log
+          if-no-files-found: warn
+
+      # 安装并配置 OSSUtil
       - name: Install OSSUtil
         run: |
           wget https://gosspublic.alicdn.com/ossutil/1.7.14/ossutil64
@@ -43,10 +52,12 @@ jobs:
         run: |
           ./ossutil64 config -e oss-cn-beijing.aliyuncs.com -i ${{ secrets.ALIYUN_AK }} -k ${{ secrets.ALIYUN_SK }}
 
+      # 上传日志到 OSS（可生成公开链接）
       - name: Upload log to Aliyun OSS
         run: |
           ./ossutil64 cp ./build-${{ inputs.app_name }}.log oss://${{ secrets.ALIYUN_BUCKET }}/logs/
 
+      # 上传 APK 到 OSS
       - name: Upload APK to Aliyun OSS
         run: |
           ./ossutil64 cp ./app/build/outputs/apk/release/*.apk oss://${{ secrets.ALIYUN_BUCKET }}/apks/${{ inputs.app_name }}/
