@@ -35,7 +35,7 @@ jobs:
         run: ./gradlew assembleRelease > build-${{ inputs.app_name }}.log
 
       - name: Upload log to Aliyun OSS
-        uses: ali-oss/oss-upload-action@v1
+        uses: aliyun/oss-upload-action@v1
         with:
           accessKeyId: ${{ secrets.ALIYUN_AK }}
           accessKeySecret: ${{ secrets.ALIYUN_SK }}
@@ -45,7 +45,7 @@ jobs:
           prefix: logs/
 
       - name: Upload APK to Aliyun OSS
-        uses: ali-oss/oss-upload-action@v1
+        uses: aliyun/oss-upload-action@v1
         with:
           accessKeyId: ${{ secrets.ALIYUN_AK }}
           accessKeySecret: ${{ secrets.ALIYUN_SK }}
