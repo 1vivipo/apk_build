@@ -1,0 +1,55 @@
+name: Universal APK Builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_name:
+        description: '应用名称'
+        required: true
+        default: 'test-app'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+          build-tools: 34.0.0
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease > build-${{ inputs.app_name }}.log
+
+      - name: Upload log to Aliyun OSS
+        uses: ali-oss/oss-upload-action@v1
+        with:
+          accessKeyId: ${{ secrets.ALIYUN_AK }}
+          accessKeySecret: ${{ secrets.ALIYUN_SK }}
+          bucket: ${{ secrets.ALIYUN_BUCKET }}
+          region: oss-cn-beijing
+          path: ./build-${{ inputs.app_name }}.log
+          prefix: logs/
+
+      - name: Upload APK to Aliyun OSS
+        uses: ali-oss/oss-upload-action@v1
+        with:
+          accessKeyId: ${{ secrets.ALIYUN_AK }}
+          accessKeySecret: ${{ secrets.ALIYUN_SK }}
+          bucket: ${{ secrets.ALIYUN_BUCKET }}
+          region: oss-cn-beijing
+          path: ./app/build/outputs/apk/release/*.apk
+          prefix: apks/${{ inputs.app_name }}/
